@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express();
 app.use(cors());
+app.use(express.json());
 // mongodb://<username>:<password>@main-shard-00-00-03xkr.mongodb.net:27017,main-shard-00-01-03xkr.mongodb.net:27017,main-shard-00-02-03xkr.mongodb.net:27017/main?ssl=true&replicaSet=Main-shard-0&authSource=admin&retryWrites=true
 // mongodb+srv://dba:<password>@cluster0.xtrut.mongodb.net/<dbname>?retryWrites=true&w=majority
 // mongodb://nuratab:<password>@cluster0-shard-00-00.9gjtn.mongodb.net:27017,cluster0-shard-00-01.9gjtn.mongodb.net:27017,cluster0-shard-00-02.9gjtn.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-dtnujq-shard-0&authSource=admin&retryWrites=true&w=majority
@@ -20,17 +21,17 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 const PORT = process.env.PORT;
 
-// const bookSchema = mongoose.Schema({
-//   bookName: String,
-//   describtion: String,
-//   image: String,
-// });
+const bookSchema = mongoose.Schema({
+  bookName: String,
+  describtion: String,
+  image: String,
+});
 
-// const Book = mongoose.model('book', bookSchema);
+const Book = mongoose.model('book', bookSchema);
 
 const userSchema = mongoose.Schema({
   email: String,
-  books: [],
+  books: [bookSchema],
 });
 
 const User = mongoose.model('user', userSchema);
@@ -105,6 +106,65 @@ app.get('/books', (req, res) => {
     }
   });
 });
+
+app.post('/addbooks', postBook);
+
+function postBook(req, res) {
+  const { bookName, describtion, image, email } = req.body;
+
+  User.find({ email: email }, (err, data) => {
+    if (err) {
+      console.log(err.message);
+      res.status(500).send(err.message);
+    } else {
+      data[0].books.push({
+        bookName,
+        describtion,
+        image,
+      });
+      data[0].save();
+      res.status(201).send(data[0].books);
+    }
+  });
+}
+
+app.delete('/deletebooks/:id',deletBook);
+
+
+function deletBook(req,res) {
+  
+  console.log("🚀 ~ file: server.js ~ line 136 ~ deletBook ~ query")
+  const {email}=req.query;
+  const id = req.params.id;
+  console.log("🚀 ~ file: server.js ~ line 139 ~ deletBook ~ id", id)
+  // console.log(index);
+  console.log(email);
+// let deletedObject = User.findByIdAndDelete({_id:id})
+// console.log("🚀 ~ file: server.js ~ line 139 ~ deletBook ~ deletedObject", deletedObject)
+// User.find({ email: email }, (err, data) => {
+//   if (err) {
+//     console.log(err);
+//   } else {
+//     console.log("🚀 ~ file: server.js ~ line 104 ~ User.find ~ data", data)
+//     res.status(200).send(data[0].books);
+//   }
+// });
+  User.find({ email: email }, (err, data) => {
+    if (err) {
+      console.log(err.message);
+      res.status(500).send(err.message);
+    } else {
+    const newBookStore=  data[0].books.filter((book,index)=>{
+        return id !=book._id;
+      })
+      data[0].books=newBookStore
+      data[0].save();
+      res.status(201).send(data[0].books);
+    }
+  });
+  
+}
+
 
 app.listen(PORT, () => console.log(`listening on hi ${PORT}`));
 
