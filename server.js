@@ -10,7 +10,7 @@ app.use(cors());
 // mongodb+srv://dba:<password>@cluster0.xtrut.mongodb.net/<dbname>?retryWrites=true&w=majority
 // mongodb://nuratab:<password>@cluster0-shard-00-00.9gjtn.mongodb.net:27017,cluster0-shard-00-01.9gjtn.mongodb.net:27017,cluster0-shard-00-02.9gjtn.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-dtnujq-shard-0&authSource=admin&retryWrites=true&w=majority
 
-mongoose.connect(`mongodb://${process.env.user}:${encodeURIComponent(`${process.env.password}`)}@cluster0-shard-00-00.9gjtn.mongodb.net:27017,cluster0-shard-00-01.9gjtn.mongodb.net:27017,cluster0-shard-00-02.9gjtn.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-dtnujq-shard-0&authSource=admin&retryWrites=true&w=majority`, {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
@@ -94,12 +94,13 @@ function createUser() {
 // createUser();
 
 app.get('/books', (req, res) => {
-  const email = req.query.userEmail;
+  const email = req.query.email;
 
   User.find({ email: email }, (err, data) => {
     if (err) {
       console.log(err);
     } else {
+      console.log("🚀 ~ file: server.js ~ line 104 ~ User.find ~ data", data)
       res.status(200).send(data[0].books);
     }
   });
